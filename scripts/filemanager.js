@@ -301,42 +301,64 @@ var formatBytes = function(bytes){
 // NOTE: closes the window when finished.
 var selectItem = function(data){
     var url = relPath + data['Path'];
-    
+
 	if(window.opener){
-	 	if(window.tinyMCEPopup){
-        	// use TinyMCE > 3.0 integration method
-            var win = tinyMCEPopup.getWindowArg("window");
-			win.document.getElementById(tinyMCEPopup.getWindowArg("input")).value = url;
-            if (typeof(win.ImageDialog) != "undefined") {
-				// Update image dimensions
-            	if (win.ImageDialog.getImageData)
-                 	win.ImageDialog.getImageData();
+            switch(true) {
+                case ('tinyMCEPopup' in window):
+                    // use TinyMCE > 3.0 integration method
+                    var win = tinyMCEPopup.getWindowArg("window");
+                    win.document.getElementById(tinyMCEPopup.getWindowArg("input")).value = url;
 
-                // Preview if necessary
-                if (win.ImageDialog.showPreviewImage)
-					win.ImageDialog.showPreviewImage(url);
-			}
-			tinyMCEPopup.close();
-			return;
-		}
-		if($.urlParam('CKEditor')){
-			// use CKEditor 3.0 integration method
-			window.opener.CKEDITOR.tools.callFunction($.urlParam('CKEditorFuncNum'), url);
-		} else {
-			// use FCKEditor 2.0 integration method
-			if(data['Properties']['Width'] != ''){
-				var p = url;
-				var w = data['Properties']['Width'];
-				var h = data['Properties']['Height'];			
-				window.opener.SetUrl(p,w,h);
-			} else {
-				window.opener.SetUrl(url);
-			}		
-		}
+                    if (typeof(win.ImageDialog) != "undefined") {
+                        // Update image dimensions
+                        if (win.ImageDialog.getImageData)
+                            win.ImageDialog.getImageData();
 
-		window.close();
+                        // Preview if necessary
+                        if (win.ImageDialog.showPreviewImage)
+                            win.ImageDialog.showPreviewImage(url);
+                    }
+                    tinyMCEPopup.close();
+                    return;
+
+                case ($.urlParam('CKEditor') ? true : false):
+                    console.debug("CKEditor v2");
+                    window.opener.CKEDITOR.tools.callFunction($.urlParam('CKEditorFuncNum'), url);
+                    break;
+
+                case ('SetUrl' in window.opener):
+                    if(data['Properties']['Width'] != ''){
+                        var p = url;
+                        var w = data['Properties']['Width'];
+                        var h = data['Properties']['Height'];
+                        window.opener.SetUrl(p,w,h);
+                    } else {
+                        window.opener.SetUrl(url);
+                    }
+                    break;
+
+
+                // generic callback.  url must define both 'callback' and 'targetNode'
+                // Call back is called as callback(targetNode, new_value)
+                case ($.urlParam('callback') ? true : false):
+                    var callback   = $.urlParam('callback'),
+                        targetNode = $.urlParam('targetNode');
+
+                    window.opener[callback](targetNode, url);
+                    break;
+
+                // if just a targetNode is in the url, set it's value directly
+                case ($.urlParam('targetNode') ? true : false):
+                    window.opener.document.getElementById($.urlParam('targetNode')).value = url;
+                    break;
+
+                default:
+                    throw "Unable to find a valid integration method";
+            }
+
+            window.close();
 	} else {
-		$.prompt(lg.fck_select_integration);
+            $.prompt(lg.fck_select_integration);
 	}
 }
 
