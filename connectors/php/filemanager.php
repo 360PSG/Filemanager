@@ -14,7 +14,7 @@
  *	@copyright	Authors
  */
 require_once('./inc/filemanager.inc.php');
-require_once('filemanager.config.php');
+require_once(defined('PHP_FILEMANAGER_CONFIG') ? PHP_FILEMANAGER_CONFIG : 'filemanager.config.php');
 require_once('filemanager.class.php');
 
 if (isset($config['plugin']) && !empty($config['plugin'])) {
@@ -40,7 +40,7 @@ if(!isset($_GET)) {
   if(isset($_GET['mode']) && $_GET['mode']!='') {
 
     switch($_GET['mode']) {
-      	
+
       default:
 
         $fm->error($fm->lang('MODE_ERROR'));
@@ -54,7 +54,7 @@ if(!isset($_GET)) {
         break;
 
       case 'getfolder':
-        	
+
         if($fm->getvar('path')) {
           $response = $fm->getfolder();
         }
@@ -97,12 +97,12 @@ if(!isset($_GET)) {
   } else if(isset($_POST['mode']) && $_POST['mode']!='') {
 
     switch($_POST['mode']) {
-      	
+
       default:
 
         $fm->error($fm->lang('MODE_ERROR'));
         break;
-        	
+
       case 'add':
 
         if($fm->postvar('currentpath')) {
